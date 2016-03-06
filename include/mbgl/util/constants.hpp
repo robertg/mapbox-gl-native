@@ -27,6 +27,7 @@ extern const double MAX_ZOOM;
 
 extern const uint64_t DEFAULT_MAX_CACHE_SIZE;
 
+extern const Duration DEFAULT_FADE_DURATION;
 extern const SystemDuration CLOCK_SKEW_RETRY_TIMEOUT;
 
 } // namespace util
