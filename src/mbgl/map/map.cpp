@@ -149,18 +149,18 @@ bool Map::isPanning() const {
 
 void Map::jumpTo(const CameraOptions& camera) {
     transform->jumpTo(camera);
-    update(camera.zoom ? Update::Zoom : Update::Repaint);
+    update(camera.zoom ? Update::RecalculateStyle : Update::Repaint);
 }
 
 void Map::easeTo(const CameraOptions& camera, const AnimationOptions& animation) {
     transform->easeTo(camera, animation);
-    update(camera.zoom ? Update::Zoom : Update::Repaint);
+    update(camera.zoom ? Update::RecalculateStyle : Update::Repaint);
 }
     
     
 void Map::flyTo(const CameraOptions& camera, const AnimationOptions& animation) {
     transform->flyTo(camera, animation);
-    update(Update::Zoom);
+    update(Update::RecalculateStyle);
 }
 
 #pragma mark - Position
@@ -198,7 +198,7 @@ void Map::resetPosition(const EdgeInsets& padding) {
     }
     camera.zoom = 0;
     transform->jumpTo(camera);
-    update(Update::Zoom);
+    update(Update::RecalculateStyle);
 }
 
 
@@ -206,12 +206,12 @@ void Map::resetPosition(const EdgeInsets& padding) {
 
 void Map::scaleBy(double ds, const ScreenCoordinate& point, const Duration& duration) {
     transform->scaleBy(ds, point, duration);
-    update(Update::Zoom);
+    update(Update::RecalculateStyle);
 }
 
 void Map::setScale(double scale, const ScreenCoordinate& point, const Duration& duration) {
     transform->setScale(scale, point, duration);
-    update(Update::Zoom);
+    update(Update::RecalculateStyle);
 }
 
 double Map::getScale() const {
@@ -224,7 +224,7 @@ void Map::setZoom(double zoom, const Duration& duration) {
 
 void Map::setZoom(double zoom, const EdgeInsets& padding, const Duration& duration) {
     transform->setZoom(zoom, padding, duration);
-    update(Update::Zoom);
+    update(Update::RecalculateStyle);
 }
 
 double Map::getZoom() const {
@@ -237,7 +237,7 @@ void Map::setLatLngZoom(const LatLng& latLng, double zoom, const Duration& durat
 
 void Map::setLatLngZoom(const LatLng& latLng, double zoom, const EdgeInsets& padding, const Duration& duration) {
     transform->setLatLngZoom(latLng, zoom, padding, duration);
-    update(Update::Zoom);
+    update(Update::RecalculateStyle);
 }
 
 CameraOptions Map::cameraForLatLngBounds(const LatLngBounds& bounds, const EdgeInsets& padding) {
