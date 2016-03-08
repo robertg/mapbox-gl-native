@@ -67,6 +67,8 @@
         'map/tile.cpp',
         'map/transform.cpp',
 
+        'tile/tile_id.cpp',
+
         'storage/storage.hpp',
         'storage/storage.cpp',
         'storage/default_file_source.cpp',
