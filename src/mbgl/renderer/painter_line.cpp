@@ -12,7 +12,10 @@
 
 using namespace mbgl;
 
-void Painter::renderLine(LineBucket& bucket, const LineLayer& layer, const TileID& id, const mat4& matrix) {
+void Painter::renderLine(LineBucket& bucket,
+                         const LineLayer& layer,
+                         const UnwrappedTileID& tileID,
+                         const mat4& matrix) {
     // Abort early.
     if (pass == RenderPass::Opaque) return;
 
@@ -51,7 +54,8 @@ void Painter::renderLine(LineBucket& bucket, const LineLayer& layer, const TileI
     color[2] *= properties.opacity;
     color[3] *= properties.opacity;
 
-    const float ratio = state.getScale() / (1ll << id.sourceZ) * util::tileSize / util::EXTENT;
+    const float ratio =
+        state.getScale() / (1ll << tileID.canonical.z) * util::tileSize / util::EXTENT;
 
     mat2 antialiasingMatrix;
     matrix::identity(antialiasingMatrix);
@@ -64,7 +68,8 @@ void Painter::renderLine(LineBucket& bucket, const LineLayer& layer, const TileI
     float x = state.getHeight() / 2.0f * std::tan(state.getPitch());
     float extra = (topedgelength + x) / topedgelength - 1;
 
-    mat4 vtxMatrix = translatedMatrix(matrix, properties.translate, id, properties.translateAnchor);
+    mat4 vtxMatrix =
+        translatedMatrix(matrix, properties.translate, tileID, properties.translateAnchor);
 
     setDepthSublayer(0);
 
@@ -86,8 +91,8 @@ void Painter::renderLine(LineBucket& bucket, const LineLayer& layer, const TileI
         const float widthA = posA.width * properties.dasharray.value.fromScale;
         const float widthB = posB.width * properties.dasharray.value.toScale;
 
-        const float patternratio =
-            std::pow(2.0, state.getIntegerZoom() - id.sourceZ) * util::tileSize / util::EXTENT;
+        const float patternratio = std::pow(2.0, state.getIntegerZoom() - tileID.canonical.z) *
+                                   util::tileSize / util::EXTENT;
 
         float scaleXA = patternratio / widthA / properties.dashLineWidth;
         float scaleYA = -posA.height / 2.0;
@@ -114,7 +119,8 @@ void Painter::renderLine(LineBucket& bucket, const LineLayer& layer, const TileI
         if (!imagePosA || !imagePosB)
             return;
 
-        const float factor = util::EXTENT / util::tileSize / std::pow(2.0f, state.getIntegerZoom() - id.sourceZ);
+        const float factor = util::EXTENT / util::tileSize /
+                             std::pow(2.0f, state.getIntegerZoom() - tileID.canonical.z);
 
         config.program = linepatternShader->getID();
 

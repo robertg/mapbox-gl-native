@@ -16,7 +16,7 @@ using namespace mbgl;
 
 template <typename BucketProperties, typename StyleProperties>
 void Painter::renderSDF(SymbolBucket &bucket,
-                        const TileID &id,
+                        const UnwrappedTileID &tileID,
                         const mat4 &matrix,
                         const BucketProperties& bucketProperties,
                         const StyleProperties& styleProperties,
@@ -25,7 +25,8 @@ void Painter::renderSDF(SymbolBucket &bucket,
                         SDFShader& sdfShader,
                         void (SymbolBucket::*drawSDF)(SDFShader&, gl::GLObjectStore&))
 {
-    mat4 vtxMatrix = translatedMatrix(matrix, styleProperties.translate, id, styleProperties.translateAnchor);
+    mat4 vtxMatrix = translatedMatrix(matrix, styleProperties.translate, tileID,
+                                      styleProperties.translateAnchor);
 
     bool skewed = (bucketProperties.rotationAlignment == RotationAlignmentType::Map);
     mat4 exMatrix;
@@ -34,7 +35,7 @@ void Painter::renderSDF(SymbolBucket &bucket,
 
     if (skewed) {
         matrix::identity(exMatrix);
-        s = util::EXTENT / util::tileSize / std::pow(2, state.getZoom() - id.sourceZ);
+        s = util::EXTENT / util::tileSize / std::pow(2, state.getZoom() - tileID.canonical.z);
         gammaScale = 1.0f / std::cos(state.getPitch());
     } else {
         exMatrix = extrudeMatrix;
@@ -126,7 +127,10 @@ void Painter::renderSDF(SymbolBucket &bucket,
     }
 }
 
-void Painter::renderSymbol(SymbolBucket& bucket, const SymbolLayer& layer, const TileID& id, const mat4& matrix) {
+void Painter::renderSymbol(SymbolBucket& bucket,
+                           const SymbolLayer& layer,
+                           const UnwrappedTileID& tileID,
+                           const mat4& matrix) {
     // Abort early.
     if (pass == RenderPass::Opaque) {
         return;
@@ -178,7 +182,7 @@ void Painter::renderSymbol(SymbolBucket& bucket, const SymbolLayer& layer, const
 
         if (sdf) {
             renderSDF(bucket,
-                      id,
+                      tileID,
                       matrix,
                       layout.icon,
                       properties.icon,
@@ -187,7 +191,8 @@ void Painter::renderSymbol(SymbolBucket& bucket, const SymbolLayer& layer, const
                       *sdfIconShader,
                       &SymbolBucket::drawIcons);
         } else {
-            mat4 vtxMatrix = translatedMatrix(matrix, properties.icon.translate, id, properties.icon.translateAnchor);
+            mat4 vtxMatrix = translatedMatrix(matrix, properties.icon.translate, tileID,
+                                              properties.icon.translateAnchor);
 
             bool skewed = layout.icon.rotationAlignment == RotationAlignmentType::Map;
             mat4 exMatrix;
@@ -195,7 +200,8 @@ void Painter::renderSymbol(SymbolBucket& bucket, const SymbolLayer& layer, const
 
             if (skewed) {
                 matrix::identity(exMatrix);
-                s = util::EXTENT / util::tileSize / std::pow(2, state.getZoom() - id.sourceZ);
+                s = util::EXTENT / util::tileSize /
+                    std::pow(2, state.getZoom() - tileID.canonical.z);
             } else {
                 exMatrix = extrudeMatrix;
                 matrix::rotate_z(exMatrix, exMatrix, state.getNorthOrientationAngle());
@@ -245,7 +251,7 @@ void Painter::renderSymbol(SymbolBucket& bucket, const SymbolLayer& layer, const
         glyphAtlas->bind(glObjectStore);
 
         renderSDF(bucket,
-                  id,
+                  tileID,
                   matrix,
                   layout.text,
                   properties.text,
@@ -261,9 +267,10 @@ void Painter::renderSymbol(SymbolBucket& bucket, const SymbolLayer& layer, const
 
         config.program = collisionBoxShader->getID();
         collisionBoxShader->u_matrix = matrix;
-        collisionBoxShader->u_scale = std::pow(2, state.getZoom() - id.z);
+        // TODO: This was the overscaled z instead of the canonical z.
+        collisionBoxShader->u_scale = std::pow(2, state.getZoom() - tileID.canonical.z);
         collisionBoxShader->u_zoom = state.getZoom() * 10;
-        collisionBoxShader->u_maxzoom = (id.z + 1) * 10;
+        collisionBoxShader->u_maxzoom = (tileID.canonical.z + 1) * 10;
         config.lineWidth = 1.0f;
 
         setDepthSublayer(0);

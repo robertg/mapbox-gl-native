@@ -159,8 +159,8 @@ void Source::load(FileSource& fileSource) {
 
 void Source::updateMatrices(const mat4 &projMatrix, const TransformState &transform) {
     for (const auto& pair : tiles) {
-        Tile &tile = *pair.second;
-        transform.matrixFor(tile.matrix, tile.id, std::min(static_cast<uint8_t>(info->maxZoom), tile.id.z));
+        auto& tile = *pair.second;
+        transform.matrixFor(tile.matrix, UnwrappedTileID{ tile.id.sourceZ, tile.id.x, tile.id.y });
         matrix::multiply(tile.matrix, projMatrix, tile.matrix);
     }
 }
@@ -172,15 +172,16 @@ void Source::finishRender(Painter &painter) {
     }
 }
 
-std::forward_list<Tile*> Source::getLoadedTiles() const {
-    std::forward_list<Tile*> ptrs;
-    auto it = ptrs.before_begin();
+std::map<UnwrappedTileID, Renderable> Source::getRenderables() const {
+    std::map<UnwrappedTileID, Renderable> renderables;
     for (const auto& pair : tiles) {
-        if (pair.second->data->isReady()) {
-            it = ptrs.insert_after(it, pair.second.get());
+        auto& tile = *pair.second;
+        if (tile.data->isReady()) {
+            renderables.emplace(UnwrappedTileID{ tile.id.sourceZ, tile.id.x, tile.id.y },
+                                Renderable{ tile.clip });
         }
     }
-    return ptrs;
+    return renderables;
 }
 
 const std::vector<Tile*>& Source::getTiles() const {

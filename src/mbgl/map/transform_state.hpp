@@ -13,7 +13,7 @@
 
 namespace mbgl {
 
-class TileID;
+class UnwrappedTileID;
 
 class TransformState {
     friend class Transform;
@@ -22,7 +22,7 @@ public:
     TransformState(ConstrainMode = ConstrainMode::HeightOnly);
 
     // Matrix
-    void matrixFor(mat4& matrix, const TileID& id, const int8_t z) const;
+    void matrixFor(mat4&, const UnwrappedTileID&) const;
     void getProjMatrix(mat4& matrix) const;
 
     // Dimensions

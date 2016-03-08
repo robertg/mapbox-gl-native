@@ -4,6 +4,8 @@
 #include <mbgl/map/transform_state.hpp>
 #include <mbgl/map/map_context.hpp>
 
+#include <mbgl/tile/tile_id.hpp>
+
 #include <mbgl/renderer/frame_history.hpp>
 #include <mbgl/renderer/bucket.hpp>
 
@@ -86,23 +88,26 @@ public:
     void renderDebugFrame(const mat4 &matrix);
 
     void renderDebugText(TileData&, const mat4&);
-    void renderFill(FillBucket&, const FillLayer&, const TileID&, const mat4&);
-    void renderLine(LineBucket&, const LineLayer&, const TileID&, const mat4&);
-    void renderCircle(CircleBucket&, const CircleLayer&, const TileID&, const mat4&);
-    void renderSymbol(SymbolBucket&, const SymbolLayer&, const TileID&, const mat4&);
-    void renderRaster(RasterBucket&, const RasterLayer&, const TileID&, const mat4&);
+    void renderFill(FillBucket&, const FillLayer&, const UnwrappedTileID&, const mat4&);
+    void renderLine(LineBucket&, const LineLayer&, const UnwrappedTileID&, const mat4&);
+    void renderCircle(CircleBucket&, const CircleLayer&, const UnwrappedTileID&, const mat4&);
+    void renderSymbol(SymbolBucket&, const SymbolLayer&, const UnwrappedTileID&, const mat4&);
+    void renderRaster(RasterBucket&, const RasterLayer&, const UnwrappedTileID&, const mat4&);
     void renderBackground(const BackgroundLayer&);
 
     float saturationFactor(float saturation);
     float contrastFactor(float contrast);
     std::array<float, 3> spinWeights(float spin_value);
 
-    void drawClippingMasks(const std::map<TileID, ClipID>&);
+    void drawClippingMasks(const std::map<UnwrappedTileID, ClipID>&);
 
     bool needsAnimation() const;
 
 private:
-    mat4 translatedMatrix(const mat4& matrix, const std::array<float, 2> &translation, const TileID &id, TranslateAnchorType anchor);
+    mat4 translatedMatrix(const mat4& matrix,
+                          const std::array<float, 2>& translation,
+                          const UnwrappedTileID& id,
+                          TranslateAnchorType anchor);
 
     std::vector<RenderItem> determineRenderOrder(const Style& style);
 
@@ -114,9 +119,9 @@ private:
     void prepareTile(const Tile& tile);
 
     template <typename BucketProperties, typename StyleProperties>
-    void renderSDF(SymbolBucket &bucket,
-                   const TileID &id,
-                   const mat4 &matrixSymbol,
+    void renderSDF(SymbolBucket& bucket,
+                   const UnwrappedTileID& id,
+                   const mat4& matrixSymbol,
                    const BucketProperties& bucketProperties,
                    const StyleProperties& styleProperties,
                    float scaleDivisor,

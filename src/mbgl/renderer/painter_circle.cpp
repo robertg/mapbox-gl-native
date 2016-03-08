@@ -12,7 +12,7 @@ using namespace mbgl;
 
 void Painter::renderCircle(CircleBucket& bucket,
                            const CircleLayer& layer,
-                           const TileID& id,
+                           const UnwrappedTileID& tileID,
                            const mat4& matrix) {
     // Abort early.
     if (pass == RenderPass::Opaque) return;
@@ -24,7 +24,7 @@ void Painter::renderCircle(CircleBucket& bucket,
     setDepthSublayer(0);
 
     const CirclePaintProperties& properties = layer.paint;
-    mat4 vtxMatrix = translatedMatrix(matrix, properties.translate, id, properties.translateAnchor);
+    mat4 vtxMatrix = translatedMatrix(matrix, properties.translate, tileID, properties.translateAnchor);
 
     Color color = properties.color;
     color[0] *= properties.opacity;
