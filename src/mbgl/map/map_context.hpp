@@ -1,7 +1,6 @@
 #ifndef MBGL_MAP_MAP_CONTEXT
 #define MBGL_MAP_MAP_CONTEXT
 
-#include <mbgl/map/tile_id.hpp>
 #include <mbgl/map/update.hpp>
 #include <mbgl/map/transform_state.hpp>
 #include <mbgl/map/map.hpp>

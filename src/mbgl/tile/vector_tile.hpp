@@ -2,7 +2,7 @@
 #define MBGL_MAP_VECTOR_TILE
 
 #include <mbgl/tile/geometry_tile.hpp>
-#include <mbgl/map/tile_id.hpp>
+#include <mbgl/tile/tile_id.hpp>
 #include <mbgl/util/pbf.hpp>
 
 #include <map>
@@ -63,12 +63,12 @@ class FileSource;
 
 class VectorTileMonitor : public GeometryTileMonitor {
 public:
-    VectorTileMonitor(const TileID&, float pixelRatio, const std::string& urlTemplate, FileSource&);
+    VectorTileMonitor(const OverscaledTileID&, float pixelRatio, const std::string& urlTemplate, FileSource&);
 
     std::unique_ptr<FileRequest> monitorTile(const GeometryTileMonitor::Callback&) override;
 
 private:
-    TileID tileID;
+    OverscaledTileID tileID;
     float pixelRatio;
     std::string urlTemplate;
     FileSource& fileSource;

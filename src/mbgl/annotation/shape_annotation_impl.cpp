@@ -79,7 +79,7 @@ void ShapeAnnotationImpl::updateStyle(Style& style) {
     }
 }
 
-void ShapeAnnotationImpl::updateTile(const TileID& tileID, AnnotationTile& tile) {
+void ShapeAnnotationImpl::updateTile(const CanonicalTileID& tileID, AnnotationTile& tile) {
     static const double baseTolerance = 4;
 
     if (!shapeTiler) {

@@ -2,7 +2,7 @@
 #define MBGL_ANNOTATION_TILE
 
 #include <mbgl/tile/geometry_tile.hpp>
-#include <mbgl/map/tile_id.hpp>
+#include <mbgl/tile/tile_id.hpp>
 
 #include <map>
 #include <unordered_map>
@@ -43,13 +43,13 @@ class MapData;
 class AnnotationTileMonitor : public GeometryTileMonitor {
 public:
     // TODO: should just take AnnotationManager&, but we need to eliminate util::exclusive<AnnotationManager> from MapData first.
-    AnnotationTileMonitor(const TileID&, MapData&);
+    AnnotationTileMonitor(const OverscaledTileID&, MapData&);
     ~AnnotationTileMonitor();
 
     void update(std::unique_ptr<GeometryTile>);
     std::unique_ptr<FileRequest> monitorTile(const GeometryTileMonitor::Callback&) override;
 
-    TileID tileID;
+    OverscaledTileID tileID;
 
 private:
     MapData& data;

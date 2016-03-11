@@ -1,6 +1,5 @@
 #include <mbgl/layer/symbol_layer.hpp>
 #include <mbgl/renderer/symbol_bucket.hpp>
-#include <mbgl/map/tile_id.hpp>
 #include <mbgl/style/style_bucket_parameters.hpp>
 
 namespace mbgl {
@@ -114,12 +113,12 @@ bool SymbolLayer::recalculate(const StyleCalculationParameters& parameters) {
 
 std::unique_ptr<Bucket> SymbolLayer::createBucket(StyleBucketParameters& parameters) const {
     auto bucket = std::make_unique<SymbolBucket>(parameters.tileID.overscaleFactor(),
-                                                 parameters.tileID.z,
+                                                 parameters.tileID.overscaledZ,
                                                  parameters.mode);
 
     bucket->layout = layout;
 
-    StyleCalculationParameters p(parameters.tileID.z);
+    StyleCalculationParameters p(parameters.tileID.overscaledZ);
     bucket->layout.placement.calculate(p);
     if (bucket->layout.placement.value == PlacementType::Line) {
         bucket->layout.icon.rotationAlignment.value = RotationAlignmentType::Map;

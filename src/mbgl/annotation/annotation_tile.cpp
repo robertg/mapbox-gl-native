@@ -28,7 +28,7 @@ util::ptr<GeometryTileLayer> AnnotationTile::getLayer(const std::string& name) c
     return nullptr;
 }
 
-AnnotationTileMonitor::AnnotationTileMonitor(const TileID& tileID_, MapData& data_)
+AnnotationTileMonitor::AnnotationTileMonitor(const OverscaledTileID& tileID_, MapData& data_)
     : tileID(tileID_),
       data(data_) {
 }

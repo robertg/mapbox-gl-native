@@ -19,7 +19,7 @@ class CollisionTile;
 
 class StyleBucketParameters {
 public:
-    StyleBucketParameters(const TileID& tileID_,
+    StyleBucketParameters(const OverscaledTileID& tileID_,
                           const GeometryTileLayer& layer_,
                           const std::atomic<TileData::State>& state_,
                           uintptr_t tileUID_,
@@ -44,7 +44,7 @@ public:
 
     void eachFilteredFeature(const FilterExpression&, std::function<void (const GeometryTileFeature&)>);
 
-    const TileID& tileID;
+    const OverscaledTileID& tileID;
     const GeometryTileLayer& layer;
     const std::atomic<TileData::State>& state;
     uintptr_t tileUID;

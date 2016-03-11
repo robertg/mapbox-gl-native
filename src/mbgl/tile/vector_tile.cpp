@@ -181,7 +181,7 @@ util::ptr<const GeometryTileFeature> VectorTileLayer::getFeature(std::size_t i) 
     return std::make_shared<VectorTileFeature>(features.at(i), *this);
 }
 
-VectorTileMonitor::VectorTileMonitor(const TileID& tileID_, float pixelRatio_, const std::string& urlTemplate_, FileSource& fileSource_)
+VectorTileMonitor::VectorTileMonitor(const OverscaledTileID& tileID_, float pixelRatio_, const std::string& urlTemplate_, FileSource& fileSource_)
     : tileID(tileID_),
       pixelRatio(pixelRatio_),
       urlTemplate(urlTemplate_),
@@ -189,7 +189,8 @@ VectorTileMonitor::VectorTileMonitor(const TileID& tileID_, float pixelRatio_, c
 }
 
 std::unique_ptr<FileRequest> VectorTileMonitor::monitorTile(const GeometryTileMonitor::Callback& callback) {
-    const Resource resource = Resource::tile(urlTemplate, pixelRatio, tileID.x, tileID.y, tileID.sourceZ);
+    const Resource resource = Resource::tile(urlTemplate, pixelRatio, tileID.canonical.x,
+                                             tileID.canonical.y, tileID.canonical.z);
     return fileSource.request(resource, [callback, this](Response res) {
         if (res.error) {
             callback(std::make_exception_ptr(std::runtime_error(res.error->message)), nullptr, res.modified, res.expires);

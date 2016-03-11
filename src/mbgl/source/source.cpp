@@ -200,7 +200,11 @@ TileData::State Source::hasTile(const TileID& tileID) {
 }
 
 bool Source::handlePartialTile(const TileID& tileID) {
-    auto it = tileDataMap.find(tileID.normalized());
+    const OverscaledTileID overscaledTileID{
+        tileID.z, UnwrappedTileID{ tileID.sourceZ, tileID.x, tileID.y }.canonical
+    };
+
+    auto it = tileDataMap.find(overscaledTileID);
     if (it == tileDataMap.end()) {
         return true;
     }
@@ -210,7 +214,7 @@ bool Source::handlePartialTile(const TileID& tileID) {
         return true;
     }
 
-    auto callback = std::bind(&Source::tileLoadingCallback, this, tileID,
+    auto callback = std::bind(&Source::tileLoadingCallback, this, overscaledTileID,
             std::placeholders::_1, false);
 
     return tileData->parsePending(callback);
@@ -227,9 +231,9 @@ TileData::State Source::addTile(const TileID& tileID, const StyleUpdateParameter
 
     // We couldn't find the tile in the list. Create a new one.
     // Try to find the associated TileData object.
-    const TileID normalizedID = tileID.normalized();
+    const OverscaledTileID overscaledTileID{ tileID.z, newTile->id.canonical };
 
-    auto it = tileDataMap.find(normalizedID);
+    auto it = tileDataMap.find(overscaledTileID);
     if (it != tileDataMap.end()) {
         // Create a shared_ptr handle. Note that this might be empty!
         newTile->data = it->second.lock();
@@ -241,16 +245,16 @@ TileData::State Source::addTile(const TileID& tileID, const StyleUpdateParameter
     }
 
     if (!newTile->data) {
-        newTile->data = cache.get(normalizedID.to_uint64());
+        newTile->data = cache.get(overscaledTileID);
     }
 
     if (!newTile->data) {
-        auto callback = std::bind(&Source::tileLoadingCallback, this, normalizedID,
+        auto callback = std::bind(&Source::tileLoadingCallback, this, overscaledTileID,
                                   std::placeholders::_1, true);
 
         // If we don't find working tile data, we're just going to load it.
         if (type == SourceType::Raster) {
-            newTile->data = std::make_shared<RasterTileData>(normalizedID,
+            newTile->data = std::make_shared<RasterTileData>(overscaledTileID,
                                                              parameters.pixelRatio,
                                                              info->tiles.at(0),
                                                              parameters.texturePool,
@@ -261,17 +265,17 @@ TileData::State Source::addTile(const TileID& tileID, const StyleUpdateParameter
             std::unique_ptr<GeometryTileMonitor> monitor;
 
             if (type == SourceType::Vector) {
-                monitor = std::make_unique<VectorTileMonitor>(normalizedID, parameters.pixelRatio, info->tiles.at(0), parameters.fileSource);
+                monitor = std::make_unique<VectorTileMonitor>(overscaledTileID, parameters.pixelRatio, info->tiles.at(0), parameters.fileSource);
             } else if (type == SourceType::Annotations) {
-                monitor = std::make_unique<AnnotationTileMonitor>(normalizedID, parameters.data);
+                monitor = std::make_unique<AnnotationTileMonitor>(overscaledTileID, parameters.data);
             } else if (type == SourceType::GeoJSON) {
-                monitor = std::make_unique<GeoJSONTileMonitor>(geojsonvt.get(), normalizedID);
+                monitor = std::make_unique<GeoJSONTileMonitor>(geojsonvt.get(), overscaledTileID);
             } else {
                 Log::Warning(Event::Style, "Source type '%s' is not implemented", SourceTypeClass(type).c_str());
                 return TileData::State::invalid;
             }
 
-            newTile->data = std::make_shared<VectorTileData>(normalizedID,
+            newTile->data = std::make_shared<VectorTileData>(overscaledTileID,
                                                              std::move(monitor),
                                                              id,
                                                              parameters.style,
@@ -416,8 +420,8 @@ bool Source::update(const StyleUpdateParameters& parameters) {
 
     // Remove tiles that we definitely don't need, i.e. tiles that are not on
     // the required list.
-    std::set<TileID> retain_data;
-    util::erase_if(tiles, [this, &retain, &retain_data, &tileCache](std::pair<const TileID, std::unique_ptr<Tile>> &pair) {
+    std::set<OverscaledTileID> retain_data;
+    util::erase_if(tiles, [this, &retain, &retain_data, &tileCache](auto &pair) {
         const auto& tileID = pair.first;
         Tile &tile = *pair.second;
         bool obsolete = std::find(retain.begin(), retain.end(), tileID) == retain.end();
@@ -427,22 +431,22 @@ bool Source::update(const StyleUpdateParameters& parameters) {
             // Partially parsed tiles are never added to the cache because otherwise
             // they never get updated if the go out from the viewport and the pending
             // resources arrive.
-            tileCache.add(tileID.normalized().to_uint64(), tile.data);
+            tileCache.add(tile.data->id, tile.data);
         }
         return obsolete;
     });
 
     // Remove all the expired pointers from the set.
-    util::erase_if(tileDataMap, [&retain_data, &tileCache](std::pair<const TileID, std::weak_ptr<TileData>> &pair) {
-        const util::ptr<TileData> tile = pair.second.lock();
-        if (!tile) {
+    util::erase_if(tileDataMap, [&retain_data, &tileCache](auto &pair) {
+        const auto tileData = pair.second.lock();
+        if (!tileData) {
             return true;
         }
 
-        bool obsolete = retain_data.find(tile->id) == retain_data.end();
+        bool obsolete = retain_data.find(tileData->id) == retain_data.end();
         if (obsolete) {
-            if (!tileCache.has(tile->id.normalized().to_uint64())) {
-                tile->cancel();
+            if (!tileCache.has(tileData->id)) {
+                tileData->cancel();
             }
             return true;
         } else {
@@ -484,9 +488,9 @@ void Source::setObserver(Observer* observer_) {
     observer = observer_;
 }
 
-void Source::tileLoadingCallback(const TileID& tileID,
-                                         std::exception_ptr error,
-                                         bool isNewTile) {
+void Source::tileLoadingCallback(const OverscaledTileID& tileID,
+                                 std::exception_ptr error,
+                                 bool isNewTile) {
     auto it = tileDataMap.find(tileID);
     if (it == tileDataMap.end()) {
         return;
