@@ -160,7 +160,7 @@ void Source::load(FileSource& fileSource) {
 void Source::updateMatrices(const mat4 &projMatrix, const TransformState &transform) {
     for (const auto& pair : tiles) {
         auto& tile = *pair.second;
-        transform.matrixFor(tile.matrix, UnwrappedTileID{ tile.id.sourceZ, tile.id.x, tile.id.y });
+        transform.matrixFor(tile.matrix, tile.id);
         matrix::multiply(tile.matrix, projMatrix, tile.matrix);
     }
 }
@@ -177,8 +177,7 @@ std::map<UnwrappedTileID, Renderable> Source::getRenderables() const {
     for (const auto& pair : tiles) {
         auto& tile = *pair.second;
         if (tile.data->isReady()) {
-            renderables.emplace(UnwrappedTileID{ tile.id.sourceZ, tile.id.x, tile.id.y },
-                                Renderable{ tile.clip });
+            renderables.emplace(tile.id, Renderable{ tile.clip });
         }
     }
     return renderables;
@@ -192,7 +191,7 @@ TileData::State Source::hasTile(const TileID& tileID) {
     auto it = tiles.find(tileID);
     if (it != tiles.end()) {
         Tile& tile = *it->second;
-        if (tile.id == tileID && tile.data) {
+        if (it->first == tileID && tile.data) {
             return tile.data->getState();
         }
     }
@@ -224,7 +223,7 @@ TileData::State Source::addTile(const TileID& tileID, const StyleUpdateParameter
         return state;
     }
 
-    auto newTile = std::make_unique<Tile>(tileID);
+    auto newTile = std::make_unique<Tile>(UnwrappedTileID{ tileID.sourceZ, tileID.x, tileID.y });
 
     // We couldn't find the tile in the list. Create a new one.
     // Try to find the associated TileData object.
@@ -419,15 +418,16 @@ bool Source::update(const StyleUpdateParameters& parameters) {
     // the required list.
     std::set<TileID> retain_data;
     util::erase_if(tiles, [this, &retain, &retain_data, &tileCache](std::pair<const TileID, std::unique_ptr<Tile>> &pair) {
+        const auto& tileID = pair.first;
         Tile &tile = *pair.second;
-        bool obsolete = std::find(retain.begin(), retain.end(), tile.id) == retain.end();
+        bool obsolete = std::find(retain.begin(), retain.end(), tileID) == retain.end();
         if (!obsolete) {
             retain_data.insert(tile.data->id);
         } else if (type != SourceType::Raster && tile.data->getState() == TileData::State::parsed) {
             // Partially parsed tiles are never added to the cache because otherwise
             // they never get updated if the go out from the viewport and the pending
             // resources arrive.
-            tileCache.add(tile.id.normalized().to_uint64(), tile.data);
+            tileCache.add(tileID.normalized().to_uint64(), tile.data);
         }
         return obsolete;
     });
