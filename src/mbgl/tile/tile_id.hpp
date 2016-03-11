@@ -50,6 +50,7 @@ public:
     inline bool operator==(const OverscaledTileID&) const;
     inline bool operator!=(const OverscaledTileID&) const;
     inline bool operator<(const OverscaledTileID&) const;
+    inline bool isChildOf(const OverscaledTileID&) const;
     inline uint32_t overscaleFactor() const;
     inline OverscaledTileID scaledTo(uint8_t z) const;
     inline UnwrappedTileID unwrapTo(int16_t wrap) const;
@@ -177,6 +178,11 @@ bool OverscaledTileID::operator<(const OverscaledTileID& rhs) const {
 
 uint32_t OverscaledTileID::overscaleFactor() const {
     return 1u << (overscaledZ - canonical.z);
+}
+
+bool OverscaledTileID::isChildOf(const OverscaledTileID& rhs) const {
+    return overscaledZ > rhs.overscaledZ &&
+           (canonical == rhs.canonical || canonical.isChildOf(rhs.canonical));
 }
 
 OverscaledTileID OverscaledTileID::scaledTo(uint8_t z) const {

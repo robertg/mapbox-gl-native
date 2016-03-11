@@ -180,6 +180,36 @@ TEST(TileID, Overscaled) {
     EXPECT_EQ(UnwrappedTileID(0, { 4, 2, 3 }), OverscaledTileID(5, { 4, 2, 3 }).unwrapTo(0));
     EXPECT_EQ(UnwrappedTileID(-1, { 4, 2, 3 }), OverscaledTileID(5, { 4, 2, 3 }).unwrapTo(-1));
     EXPECT_EQ(UnwrappedTileID(1, { 4, 2, 3 }), OverscaledTileID(5, { 4, 2, 3 }).unwrapTo(1));
+
+    EXPECT_FALSE(OverscaledTileID(2, 0, 0).isChildOf(OverscaledTileID(3, 1, 1)));
+    EXPECT_FALSE(OverscaledTileID(3, 1, 1).isChildOf(OverscaledTileID(3, 1, 1)));
+    EXPECT_TRUE(OverscaledTileID(4, 2, 3).isChildOf(OverscaledTileID(3, 1, 1)));
+    EXPECT_TRUE(OverscaledTileID(5, { 4, 2, 3 }).isChildOf(OverscaledTileID(3, 1, 1)));
+    EXPECT_TRUE(OverscaledTileID(6, { 4, 2, 3 }).isChildOf(OverscaledTileID(3, 1, 1)));
+    EXPECT_TRUE(OverscaledTileID(7, { 4, 2, 3 }).isChildOf(OverscaledTileID(3, 1, 1)));
+
+    EXPECT_FALSE(OverscaledTileID(2, 0, 0).isChildOf(OverscaledTileID(5, { 4, 2, 3 })));
+    EXPECT_FALSE(OverscaledTileID(3, 1, 1).isChildOf(OverscaledTileID(5, { 4, 2, 3 })));
+    EXPECT_FALSE(OverscaledTileID(4, 2, 3).isChildOf(OverscaledTileID(5, { 4, 2, 3 })));
+    EXPECT_FALSE(OverscaledTileID(5, { 4, 2, 3 }).isChildOf(OverscaledTileID(5, { 4, 2, 3 })));
+    EXPECT_TRUE(OverscaledTileID(6, { 4, 2, 3 }).isChildOf(OverscaledTileID(5, { 4, 2, 3 })));
+    EXPECT_TRUE(OverscaledTileID(7, { 4, 2, 3 }).isChildOf(OverscaledTileID(5, { 4, 2, 3 })));
+
+    EXPECT_FALSE(OverscaledTileID(2, 0, 0).isChildOf(OverscaledTileID(6, { 4, 2, 3 })));
+    EXPECT_FALSE(OverscaledTileID(3, 1, 1).isChildOf(OverscaledTileID(6, { 4, 2, 3 })));
+    EXPECT_FALSE(OverscaledTileID(4, 2, 3).isChildOf(OverscaledTileID(6, { 4, 2, 3 })));
+    EXPECT_FALSE(OverscaledTileID(5, { 4, 2, 3 }).isChildOf(OverscaledTileID(6, { 4, 2, 3 })));
+    EXPECT_FALSE(OverscaledTileID(6, { 4, 2, 3 }).isChildOf(OverscaledTileID(6, { 4, 2, 3 })));
+    EXPECT_TRUE(OverscaledTileID(7, { 4, 2, 3 }).isChildOf(OverscaledTileID(6, { 4, 2, 3 })));
+
+    EXPECT_FALSE(OverscaledTileID(2, 0, 0).isChildOf(OverscaledTileID(5, { 4, 0, 0 })));
+    EXPECT_FALSE(OverscaledTileID(3, 1, 1).isChildOf(OverscaledTileID(5, { 4, 0, 0 })));
+    EXPECT_FALSE(OverscaledTileID(4, 2, 3).isChildOf(OverscaledTileID(5, { 4, 0, 0 })));
+    EXPECT_FALSE(OverscaledTileID(5, { 4, 2, 3 }).isChildOf(OverscaledTileID(5, { 4, 0, 0 })));
+    EXPECT_FALSE(OverscaledTileID(6, { 4, 2, 3 }).isChildOf(OverscaledTileID(5, { 4, 0, 0 })));
+    EXPECT_FALSE(OverscaledTileID(7, { 4, 2, 3 }).isChildOf(OverscaledTileID(5, { 4, 0, 0 })));
+
+    EXPECT_FALSE(OverscaledTileID(4, { 4, 2, 3 }).isChildOf(OverscaledTileID(5, { 3, 1, 1 })));
 }
 
 TEST(TileID, Unwrapped) {
