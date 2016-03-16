@@ -571,7 +571,7 @@ public class MapView extends FrameLayout {
         return mNativeMapView.getPitch();
     }
 
-    void setTilt(Double pitch, @Nullable Long duration) {
+    public void setTilt(Double pitch, @Nullable Long duration) {
         long actualDuration = 0;
         if (duration != null) {
             actualDuration = duration;
