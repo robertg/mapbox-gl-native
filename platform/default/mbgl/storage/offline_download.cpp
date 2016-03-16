@@ -229,12 +229,8 @@ void OfflineDownload::ensureResource(const Resource& resource, std::function<voi
 
             return;
         }
-
-        if (resource.kind == Resource::Kind::Tile
-            && util::mapbox::isMapboxURL(resource.url)
-            && offlineDatabase.offlineMapboxTileCountLimitExceeded()) {
-            observer->mapboxTileCountLimitExceeded(offlineDatabase.getOfflineMapboxTileCountLimit());
-            setState(OfflineRegionDownloadState::Inactive);
+        
+        if (hasExceededTileCount(resource)) {
             return;
         }
 
@@ -250,17 +246,35 @@ void OfflineDownload::ensureResource(const Resource& resource, std::function<voi
             if (callback) {
                 callback(onlineResponse);
             }
-
+            
             status.completedResourceCount++;
             status.completedResourceSize += offlineDatabase.putRegionResource(id, resource, onlineResponse);
 
             observer->statusChanged(status);
+            
+            if (hasExceededTileCount(resource)) {
+                return;
+            }
             
             if (status.complete()) {
                 setState(OfflineRegionDownloadState::Inactive);
             }
         });
     });
+}
+
+bool OfflineDownload::hasExceededTileCount(const Resource& resource) {
+    bool tileCountExceeded = false;
+    
+    if (resource.kind == Resource::Kind::Tile
+        && util::mapbox::isMapboxURL(resource.url)
+        && offlineDatabase.offlineMapboxTileCountLimitExceeded()) {
+        observer->mapboxTileCountLimitExceeded(offlineDatabase.getOfflineMapboxTileCountLimit());
+        setState(OfflineRegionDownloadState::Inactive);
+        tileCountExceeded = true;
+    }
+    
+    return tileCountExceeded;
 }
 
 } // namespace mbgl
